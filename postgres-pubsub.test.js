@@ -6,11 +6,6 @@ const { PostgresPubSub } = require("./postgres-pubsub");
 let client;
 
 describe("PostgresPubSub", () => {
-  beforeEach(async () => {
-    client = new Client();
-    await client.connect();
-  });
-
   test("PostgresPubSub can subscribe when instantiated without a client", function(done) {
     const ps = new PostgresPubSub();
     ps.subscribe("a", payload => {
@@ -18,18 +13,18 @@ describe("PostgresPubSub", () => {
       done();
     }).then(() => {
       const succeed = ps.publish("a", "test");
-      expect(succeed).toBe(true);
+      expect(succeed).resolves.toBe(true);
     });
   });
 
   test("PostgresPubSub can subscribe and is called when events happen", function(done) {
-    const ps = new PostgresPubSub({ client });
+    const ps = new PostgresPubSub();
     ps.subscribe("a", payload => {
       expect(payload).toEqual("test");
       done();
     }).then(() => {
       const succeed = ps.publish("a", "test");
-      expect(succeed).toBe(true);
+      expect(succeed).resolves.toBe(true);
     });
   });
 
@@ -42,55 +37,43 @@ describe("PostgresPubSub", () => {
       done();
     }).then(() => {
       const succeed = ps.publish("a", "test");
-      expect(succeed).toBe(true);
-    });
-  });
-
-  test("should send notification event after calling publish", done => {
-    const ps = new PostgresPubSub({ client });
-    client.on("notification", ({ payload }) => {
-      expect(payload).toEqual("test");
-      done();
-    });
-    ps.subscribe("a", payload => {
-      expect(payload).toEqual("test");
-    }).then(() => {
-      const succeed = ps.publish("a", "test");
-      expect(succeed).toBe(true);
+      expect(succeed).resolves.toBe(true);
     });
   });
 
   test("PostgresPubSub can unsubscribe", function(done) {
-    const ps = new PostgresPubSub({ client });
+    const ps = new PostgresPubSub();
     ps.subscribe("a", payload => {
       expect(false).toBe(true); // Should not reach this point
     }).then(subId => {
       ps.unsubscribe(subId);
       const succeed = ps.publish("a", "test");
-      expect(succeed).toBe(true); // True because publish success is not
+      expect(succeed).resolves.toBe(true); // True because publish success is not
       // indicated by trigger having subscriptions
       done(); // works because pubsub is synchronous
     });
   });
 
   test("Should emit error when payload exceeds Postgres 8000 character limit", done => {
-    const ps = new PostgresPubSub({ client });
+    const ps = new PostgresPubSub();
+
+    ps.events.on("error", err => {
+      expect(err.toString()).toContain('payload')
+      done();
+    })
+
     ps.subscribe("a", () => {
       expect(false).toBe(true); // Should not reach this point
       done();
-    });
-    ps.subscribe("error", err => {
-      expect(err.message).toEqual("payload string too long");
-      done();
     }).then(() => {
       const succeed = ps.publish("a", "a".repeat(9000));
-      expect(succeed).toBe(true);
+      expect(succeed).resolves.toBe(true);
     });
   });
 
   test("AsyncIterator should expose valid asyncIterator for a specific event", () => {
     const eventName = "test";
-    const ps = new PostgresPubSub({ client });
+    const ps = new PostgresPubSub({ topics: [eventName]});
     const iterator = ps.asyncIterator(eventName);
     expect(iterator).not.toBeUndefined();
     expect(isAsyncIterable(iterator)).toBe(true);
@@ -98,7 +81,7 @@ describe("PostgresPubSub", () => {
 
   test("AsyncIterator should trigger event on asyncIterator when published", done => {
     const eventName = "test";
-    const ps = new PostgresPubSub({ client });
+    const ps = new PostgresPubSub({ topics: [eventName]});
     const iterator = ps.asyncIterator(eventName);
 
     iterator.next().then(result => {
@@ -113,7 +96,7 @@ describe("PostgresPubSub", () => {
 
   test("AsyncIterator should not trigger event on asyncIterator when publishing other event", done => {
     const eventName = "test2";
-    const ps = new PostgresPubSub({ client });
+    const ps = new PostgresPubSub({ topics: [eventName]});
     const iterator = ps.asyncIterator("test");
     const spy = jest.fn();
 
@@ -125,7 +108,7 @@ describe("PostgresPubSub", () => {
 
   test("AsyncIterator should register to multiple events", done => {
     const eventName = "test2";
-    const ps = new PostgresPubSub({ client });
+    const ps = new PostgresPubSub({ topics: ['test', 'test2']});
     const iterator = ps.asyncIterator(["test", "test2"]);
     const spy = jest.fn();
 
@@ -140,7 +123,7 @@ describe("PostgresPubSub", () => {
   test("AsyncIterator transforms messages using commonMessageHandler", done => {
     const eventName = "test";
     const commonMessageHandler = message => ({ transformed: message });
-    const ps = new PostgresPubSub({ client, commonMessageHandler });
+    const ps = new PostgresPubSub({ commonMessageHandler, topics: [eventName] });
     const iterator = ps.asyncIterator(eventName);
 
     iterator.next().then(result => {
@@ -155,13 +138,13 @@ describe("PostgresPubSub", () => {
 
   test("PostgresPubSub transforms messages using commonMessageHandler", function(done) {
     const commonMessageHandler = message => ({ transformed: message });
-    const ps = new PostgresPubSub({ client, commonMessageHandler });
+    const ps = new PostgresPubSub({ commonMessageHandler });
     ps.subscribe("transform", payload => {
       expect(payload).toEqual({ transformed: { test: true } });
       done();
     }).then(() => {
       const succeed = ps.publish("transform", { test: true });
-      expect(succeed).toBe(true);
+      expect(succeed).resolves.toBe(true);
     });
   });
 
@@ -170,7 +153,7 @@ describe("PostgresPubSub", () => {
   // TODO: Fix it properly
   test("AsyncIterator should not trigger event on asyncIterator already returned", async done => {
     const eventName = "test";
-    const ps = new PostgresPubSub({ client });
+    const ps = new PostgresPubSub({ topics: [eventName]});
     const iterator = ps.asyncIterator(eventName);
 
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms));

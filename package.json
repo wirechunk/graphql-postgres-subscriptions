@@ -16,8 +16,7 @@
   "dependencies": {
     "graphql-subscriptions": "^0.5.8",
     "iterall": "^1.2.2",
-    "pg": "^7.4.1",
-    "pg-ipc": "^1.0.4"
+    "pg-listen": "^1.7.0"
   },
   "devDependencies": {
     "graphql": "^14.0.2",

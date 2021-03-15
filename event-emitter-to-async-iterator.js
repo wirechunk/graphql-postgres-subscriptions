@@ -2,14 +2,14 @@
 const { $$asyncIterator } = require("iterall");
 const { EventEmitter } = require("events");
 
-function eventEmitterAsyncIterator(eventEmitter, eventsNames, commonMessageHandler = message => message) {
+function eventEmitterAsyncIterator(pgListen, eventsNames, commonMessageHandler = message => message) {
   const pullQueue = [];
   const pushQueue = [];
   const eventsArray =
     typeof eventsNames === "string" ? [eventsNames] : eventsNames;
   let listening = true;
 
-  const pushValue = ({ payload: event }) => {
+  const pushValue = (event) => {
     const value = commonMessageHandler(event);
     if (pullQueue.length !== 0) {
       pullQueue.shift()({ value, done: false });
@@ -31,22 +31,16 @@ function eventEmitterAsyncIterator(eventEmitter, eventsNames, commonMessageHandl
   const emptyQueue = () => {
     if (listening) {
       listening = false;
-      removeEventListeners();
+      pgListen.unlistenAll();
       pullQueue.forEach(resolve => resolve({ value: undefined, done: true }));
       pullQueue.length = 0;
       pushQueue.length = 0;
     }
   };
 
-  const addEventListeners = () => {
+  const addEventListeners = async () => {
     for (const eventName of eventsArray) {
-      eventEmitter.addListener(eventName, pushValue);
-    }
-  };
-
-  const removeEventListeners = () => {
-    for (const eventName of eventsArray) {
-      eventEmitter.removeListener(eventName, pushValue);
+      pgListen.notifications.on(eventName, pushValue);
     }
   };
 

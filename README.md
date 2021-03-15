@@ -32,26 +32,21 @@ import { PostgresPubSub } from "graphql-postgres-subscriptions";
 export const pubsub = new PostgresPubSub();
 ```
 
-This library uses [`node-postgres`](https://github.com/brianc/node-postgres) to connect to PostgreSQL. If you want to customize connection options, please refer to their [connection docs](https://node-postgres.com/features/connecting).
+This library uses [`pg-listen`](https://www.npmjs.com/package/pg-listen) to connect to PostgreSQL. If you want to customize connection options, please refer to their connection docs.
 
-You have three options:
+You have two options:
 
 If you don's send any argument to `new PostgresPubSub()`, we'll create a `postgres` client with no arguments.
 
 You can also pass [node-postgres connection options](https://node-postgres.com/features/connecting#programmatic) to `PostgresPubSub`.
 
-You can instantiate your own `client` and pass it to `PostgresPubSub`. Like this:
+**Important**: If you want to use the asyncIterator (which is used by graphql subscriptions) you need to pass them as an array of topics on the options parameter. This should be an array of all the topics/channels you want to subscribe to. The reason we need to know these ahead of time, is because otherwise it would be an async operation to add them or create the async iterator.
 
 ```js
-import { PostgresPubSub } from "graphql-postgres-subscriptions";
-import { Client } from "pg";
-
-const client = new Client();
-await client.connect();
-const pubsub = new PostgresPubSub({ client });
+export const pubsub = new PostgresPubSub({
+  topics: ['a', 'b', 'c']
+})
 ```
-
-**Important**: Don't pass clients from `pg`'s `Pool` to `PostgresPubSub`. As [node-postgres creator states in this StackOverflow answer](https://stackoverflow.com/questions/8484404/what-is-the-proper-way-to-use-the-node-js-postgresql-module), the client needs to be around and not shared so pg can properly handle `NOTIFY` messages (which this library uses under the hood)
 
 ### commonMessageHandler
 
@@ -77,27 +72,18 @@ export const resolvers = {
 
 ## Error handling
 
-`PostgresPubSub` instances emit a special event called `"error"`. This event's payload is an instance of Javascript's `Error`. You can get the error's text using `error.message`.
+Following how pg-listen works, `PostgresPubSub` instances have an `events` event emitter which emits `'error'` events.
 
 ```js
-const ps = new PostgresPubSub({ client });
+const ps = new PostgresPubSub();
 
-ps.subscribe("error", err => {
-  console.log(err.message); // -> "payload string too long"
-}).then(() => ps.publish("a", "a".repeat(9000)));
-```
-
-For example you can log all error messages (including stack traces and friends) using something like this:
-
-```js
-ps.subscribe("error", console.error);
+ps.events.on("error", err => {
+  console.log(err)
+})
 ```
 
 ## Development
 
 This project has an integration test suite that uses [`jest`](https://facebook.github.io/jest/) to make sure everything works correctly.
 
-We use Docker to spin up a PostgreSQL instance before running the tests. To run them, type the following commands:
-
-- `docker-compose build`
-- `docker-compose run test`
+There was a docker image, but it doesn't work anymore. Run Postgres locally and set environment variable `PGDATABASE = postgres`
