@@ -1,6 +1,6 @@
-# graphql-postgres-subscriptions
+Forked from GraphQLCollege/graphql-postgres-subscriptions, where we replaced `pg-ipc` with `pg-listen` so that the database connection with retry and reconnect.
 
-[![Build Status](https://travis-ci.org/GraphQLCollege/graphql-postgres-subscriptions.svg?branch=master)](https://travis-ci.org/GraphQLCollege/graphql-postgres-subscriptions)
+# graphql-postgres-subscriptions
 
 A graphql subscriptions implementation using postgres and apollo's graphql-subscriptions.
 
@@ -8,7 +8,7 @@ This package implements the PubSubEngine Interface from the graphql-subscription
 
 ## Installation
 
-`yarn add graphql-postgres-subscriptions` or `npm install graphql-postgres-subscriptions --save`
+`yarn add graphql-postgres-subscriptions-retry` or `npm install graphql-postgres-subscriptions-retry --save`
 
 ## Usage
 
@@ -20,14 +20,14 @@ Afterwards replace `PubSub` with `PostgresPubSub`:
 
 ```js
 // Before
-import { PubSub } from "graphql-subscriptions";
+import { PubSub } from "graphql-subscriptions-retry";
 
 export const pubsub = new PubSub();
 ```
 
 ```js
 // After
-import { PostgresPubSub } from "graphql-postgres-subscriptions";
+import { PostgresPubSub } from "graphql-postgres-subscriptions-retry";
 
 export const pubsub = new PostgresPubSub();
 ```
@@ -86,4 +86,6 @@ ps.events.on("error", err => {
 
 This project has an integration test suite that uses [`jest`](https://facebook.github.io/jest/) to make sure everything works correctly.
 
-There was a docker image, but it doesn't work anymore. Run Postgres locally and set environment variable `PGDATABASE = postgres`
+Run tests via docker compose:
+`docker compose build`
+`docker compose up`

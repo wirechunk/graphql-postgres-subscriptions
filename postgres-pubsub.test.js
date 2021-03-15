@@ -1,6 +1,5 @@
 // Adapted from https://github.com/apollographql/graphql-subscriptions/blob/master/src/test/tests.ts
 const { isAsyncIterable } = require("iterall");
-const { Client } = require("pg");
 
 const { PostgresPubSub } = require("./postgres-pubsub");
 let client;
