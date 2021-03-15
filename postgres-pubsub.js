@@ -42,8 +42,6 @@ class PostgresPubSub extends PubSub {
       await this.connect();
     }
 
-    console.log('notifying', triggerName, payload)
-
     try {
       await this.pgListen.notify(triggerName, payload);
     } catch (e) {
@@ -57,7 +55,6 @@ class PostgresPubSub extends PubSub {
     }
 
     const callback = message => {
-      console.log('got message', message)
       onMessage(
         message instanceof Error
           ? message
@@ -69,7 +66,6 @@ class PostgresPubSub extends PubSub {
     this.pgListen.notifications.on(triggerName, callback);
     this.subIdCounter = this.subIdCounter + 1;
     this.subscriptions[this.subIdCounter] = [triggerName, callback];
-    console.log('returning from subscribe')
     return Promise.resolve(this.subIdCounter);
   }
   async unsubscribe(subId) {
