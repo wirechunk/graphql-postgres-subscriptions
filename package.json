@@ -1,5 +1,5 @@
 {
-  "name": "graphql-postgres-subscriptions",
+  "name": "graphql-postgres-subscriptions-retry",
   "version": "1.0.5",
   "main": "index.js",
   "license": "MIT",
