@@ -8,7 +8,7 @@ This package implements the PubSubEngine Interface from the graphql-subscription
 
 ## Installation
 
-`yarn add graphql-postgres-subscriptions-retry` or `npm install graphql-postgres-subscriptions-retry --save`
+`yarn add @originlabs/graphql-postgres-subscriptions-retry` or `npm install @originlabs/graphql-postgres-subscriptions-retry --save`
 
 ## Usage
 
