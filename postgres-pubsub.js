@@ -39,7 +39,8 @@ class PostgresPubSub extends PubSub {
 
   async publish(triggerName, payload) {
     if (!this.connected) {
-      await this.connect();
+      console.log(`attempted to publish a ${triggerName} event via pubsub, but client is not yet connected`)
+      return false;
     }
 
     try {
@@ -50,10 +51,6 @@ class PostgresPubSub extends PubSub {
     return true;
   }
   async subscribe(triggerName, onMessage) {
-    if (!this.connected) {
-      await this.connect();
-    }
-
     const callback = message => {
       onMessage(
         message instanceof Error
@@ -70,7 +67,7 @@ class PostgresPubSub extends PubSub {
   }
   async unsubscribe(subId) {
     if (!this.connected) {
-      await this.connect();
+      console.log('attempted to publish an event via pubsub, but client is not yet connected')
     }
 
     const [triggerName, onMessage] = this.subscriptions[subId];

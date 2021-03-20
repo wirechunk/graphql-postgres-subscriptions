@@ -30,7 +30,10 @@ export const pubsub = new PubSub();
 import { PostgresPubSub } from "graphql-postgres-subscriptions-retry";
 
 export const pubsub = new PostgresPubSub();
+await pubsub.connect()
 ```
+
+Don't forget to await the `connect()` method, or else it will never start the connection with postgres.
 
 This library uses [`pg-listen`](https://www.npmjs.com/package/pg-listen) to connect to PostgreSQL. If you want to customize connection options, please refer to their connection docs.
 
@@ -46,6 +49,7 @@ You can also pass [node-postgres connection options](https://node-postgres.com/f
 export const pubsub = new PostgresPubSub({
   topics: ['a', 'b', 'c']
 })
+await pubsub.connect()
 ```
 
 ### commonMessageHandler
