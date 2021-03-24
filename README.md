@@ -85,6 +85,9 @@ ps.events.on("error", err => {
   console.log(err)
 })
 ```
+## Shutdown
+
+This fork provides a new `async close():Promise<void>` method that can be called to stop the listeners and release the `pg` connection for a clean shutdown.
 
 ## Development
 

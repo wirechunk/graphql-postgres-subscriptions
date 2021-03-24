@@ -74,6 +74,11 @@ class PostgresPubSub extends PubSub {
     delete this.subscriptions[subId];
     this.pgListen.unlisten(triggerName);
   }
+  async close() {
+    await this.pgListen.unlistenAll();
+    await this.pgListen.close();
+    this.connected = false;
+  }
 
   asyncIterator(triggers) {
     return eventEmitterAsyncIterator(
