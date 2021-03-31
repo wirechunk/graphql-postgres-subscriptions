@@ -31,7 +31,6 @@ function eventEmitterAsyncIterator(pgListen, eventsNames, commonMessageHandler =
   const emptyQueue = () => {
     if (listening) {
       listening = false;
-      pgListen.unlistenAll();
       pullQueue.forEach(resolve => resolve({ value: undefined, done: true }));
       pullQueue.length = 0;
       pushQueue.length = 0;
