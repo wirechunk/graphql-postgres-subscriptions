@@ -30,11 +30,22 @@ class PostgresPubSub extends PubSub {
   }
 
   async connect() {
-    await this.pgListen.connect();
-    await Promise.all(this.triggers.map((eventName) => {
-      return this.pgListen.listenTo(eventName);
-    }));
-    this.connected = true;
+    console.log('calling connect')
+    // confusingly, `pgListen.connect()` will reject if the first connection attempt fails
+    // but then it will retry and emit a `connected` event if it later connects
+    // see https://github.com/andywer/pg-listen/issues/32
+    // so we put logic on the `connected` event
+    this.pgListen.events.on('connected', async () => {
+      await Promise.all(this.triggers.map((eventName) => {
+        return this.pgListen.listenTo(eventName);
+      }));
+      this.connected = true;
+    });
+    try {
+      await this.pgListen.connect();
+    } catch (e) {
+      if (!e.message.includes('ECONNREFUSED')) throw e;
+    }
   }
 
   async publish(triggerName, payload) {
@@ -67,7 +78,7 @@ class PostgresPubSub extends PubSub {
   }
   async unsubscribe(subId) {
     if (!this.connected) {
-      console.log('attempted to publish an event via pubsub, but client is not yet connected')
+      console.log('attempted to unsubscribe to events via pubsub, but client is not yet connected')
     }
 
     const [triggerName, onMessage] = this.subscriptions[subId];
