@@ -29,24 +29,48 @@ class PostgresPubSub extends PubSub {
     this.connected = false;
   }
 
+  /**
+   * @returns
+   * Rejects when any of the following occur:
+   *   1. pg-listen's initial `connect` fails for an exotic (i.e., non-ECONNREFUSED)
+   *      reason.
+   *   2. pg-listen emits 'error', likely indicating initial connection failed
+   *      even after repeated attempts.
+   *   3. Connection to the database was successful, but at least one
+   *      `LISTEN` query failed.
+   *
+   * Fulfills otherwise, indicating all of the requested triggers are now being
+   * listened to.
+   */
   async connect() {
-    console.log('calling connect')
-    // confusingly, `pgListen.connect()` will reject if the first connection attempt fails
-    // but then it will retry and emit a `connected` event if it later connects
-    // see https://github.com/andywer/pg-listen/issues/32
-    // so we put logic on the `connected` event
-    this.pgListen.events.on('connected', () => {
-      Promise.all(this.triggers.map((eventName) => {
-        return this.pgListen.listenTo(eventName);
-      })).then(() => {
-        this.connected = true;
-      });
-    });
+    // These event listeners must be added prior to calling pg-listen's
+    // `connect`, who may emit these events.
+    const eventPromises = Promise.race([
+      // confusingly, `pgListen.connect()` will reject if the first connection attempt fails
+      // but then it will retry and emit a `connected` event if it later connects
+      // see https://github.com/andywer/pg-listen/issues/32
+      // so we put logic on the `connected` event
+      new Promise((resolve, reject) => {
+        this.pgListen.events.once('connected', () => {
+          Promise.all(this.triggers.map((eventName) => {
+            return this.pgListen.listenTo(eventName);
+          })).then(resolve, reject);
+        });
+      }),
+      new Promise((_, reject) => {
+        this.pgListen.events.once('error', reject);
+      }),
+    ]);
+
     try {
       await this.pgListen.connect();
     } catch (e) {
       if (!e.message.includes('ECONNREFUSED')) throw e;
     }
+
+    await eventPromises;
+
+    this.connected = true;
   }
 
   async publish(triggerName, payload) {
