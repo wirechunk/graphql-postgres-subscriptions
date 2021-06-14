@@ -57,22 +57,14 @@ describe("PostgresPubSub", () => {
     }).catch(done);
   });
 
-  test("Should emit error when payload exceeds Postgres 8000 character limit", async (done) => {
+  test("Should emit error when payload exceeds Postgres 8000 character limit", async () => {
     const ps = new PostgresPubSub();
     await ps.connect();
 
-    ps.events.on("error", err => {
-      expect(err.toString()).toContain('payload')
-      done();
-    })
-
-    ps.subscribe("a", () => {
-      expect(false).toBe(true); // Should not reach this point
-      done();
-    }).then(() => {
-      const succeed = ps.publish("a", "a".repeat(9000));
-      expect(succeed).resolves.toBe(true);
-    }).catch(done);
+    await ps.subscribe("a", () => {});
+    await expect(
+      ps.publish("a", "a".repeat(9000))
+    ).rejects.toThrow('payload string too long');
   });
 
   test("AsyncIterator should expose valid asyncIterator for a specific event", () => {

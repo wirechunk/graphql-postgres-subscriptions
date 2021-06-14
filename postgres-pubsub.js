@@ -75,15 +75,11 @@ class PostgresPubSub extends PubSub {
 
   async publish(triggerName, payload) {
     if (!this.connected) {
-      console.log(`attempted to publish a ${triggerName} event via pubsub, but client is not yet connected`)
-      return false;
+      const message = `attempted to publish a ${triggerName} event via pubsub, but client is not yet connected`;
+      return Promise.reject(new Error(message));
     }
 
-    try {
-      await this.pgListen.notify(triggerName, payload);
-    } catch (e) {
-      this.pgListen.events.emit('error', e)
-    }
+    await this.pgListen.notify(triggerName, payload);
     return true;
   }
   async subscribe(triggerName, onMessage) {
