@@ -47,13 +47,7 @@ class PostgresPubSub extends PubSub {
     // `connect`, who may emit these events.
     const connectedAndListening = new Promise((resolve, reject) => {
       this.pgListen.events.once('connected', () => {
-        // confusingly, `pgListen.connect()` will reject if the first connection attempt fails
-        // but then it will retry and emit a `connected` event if it later connects
-        // see https://github.com/andywer/pg-listen/issues/32
-        // so we put logic on the `connected` event
-        Promise.all(this.triggers.map((eventName) => {
-          return this.pgListen.listenTo(eventName);
-        })).then(resolve, reject);
+        this.initTopics(this.triggers).then(resolve, reject);
       });
     });
 
@@ -72,6 +66,16 @@ class PostgresPubSub extends PubSub {
     this.connected = true;
   }
 
+  initTopics(triggers) {
+      // confusingly, `pgListen.connect()` will reject if the first connection attempt fails
+      // but then it will retry and emit a `connected` event if it later connects
+      // see https://github.com/andywer/pg-listen/issues/32
+      // so we put logic on the `connected` event
+      return Promise.all(triggers.map((eventName) => {
+        return this.pgListen.listenTo(eventName);
+      }));
+  }
+  
   async publish(triggerName, payload) {
     if (!this.connected) {
       const message = `attempted to publish a ${triggerName} event via pubsub, but client is not yet connected`;
@@ -110,7 +114,18 @@ class PostgresPubSub extends PubSub {
     await this.pgListen.close();
     this.connected = false;
   }
-
+  /*
+  * The difference between this function and asyncIterator is that the 
+  * topics can still be empty. 
+  */
+  async asyncIteratorPromised(triggers) {
+    await this.initTopics(Array.isArray(triggers) ? triggers : [triggers] );
+    return eventEmitterAsyncIterator(
+      this.pgListen,
+      triggers,
+      this.commonMessageHandler
+    );
+  }
   asyncIterator(triggers) {
     return eventEmitterAsyncIterator(
       this.pgListen,

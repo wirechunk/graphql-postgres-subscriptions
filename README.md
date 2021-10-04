@@ -43,7 +43,7 @@ If you don's send any argument to `new PostgresPubSub()`, we'll create a `postgr
 
 You can also pass [node-postgres connection options](https://node-postgres.com/features/connecting#programmatic) to `PostgresPubSub`.
 
-**Important**: If you want to use the asyncIterator (which is used by graphql subscriptions) you need to pass them as an array of topics on the options parameter. This should be an array of all the topics/channels you want to subscribe to. The reason we need to know these ahead of time, is because otherwise it would be an async operation to add them or create the async iterator.
+**Important**: If you want to use the asyncIterator (which is used by graphql subscriptions) you need to pass them as an array of topics on the options parameter. This should be an array of all the topics/channels you want to subscribe to. The reason we need to know these ahead of time, is because otherwise it would be an async operation to add them or create the async iterator or use the `asyncIteratorPromised` function instead.
 
 ```js
 export const pubsub = new PostgresPubSub({

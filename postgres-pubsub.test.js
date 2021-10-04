@@ -183,4 +183,19 @@ describe("PostgresPubSub", () => {
 
     ps.publish(eventName, { test: true });
   });
+  
+  test("AsyncIteratorPromised should work without having topics on constructor", async (done) => {
+    const eventName = "test2";
+    const ps = new PostgresPubSub();
+    await ps.connect();
+    const iterator = await ps.asyncIteratorPromised(["test", "test2"]);
+    const spy = jest.fn();
+
+    iterator.next().then(() => {
+      spy();
+      expect(spy).toHaveBeenCalled();
+      done();
+    }).catch(done);
+    ps.publish(eventName, { test: true });
+  });
 });

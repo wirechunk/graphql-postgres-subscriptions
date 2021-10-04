@@ -9,4 +9,5 @@ export class PostgresPubSub extends PubSub {
 	connected: boolean;
 	connect(): Promise<void>;
 	close(): Promise<void>;
+	asyncIteratorPromised<T>(triggers: string | string[]): Promise<AsyncIterator<T>>;
 }
