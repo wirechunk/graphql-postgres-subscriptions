@@ -1,12 +1,13 @@
 {
   "name": "graphql-subscriptions-postgres",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "./build/index.ts",
   "type": "module",
   "license": "MIT",
   "engines": {
     "node": ">=18"
   },
+  "files": ["build"],
   "repository": {
     "type": "git",
     "url": "https://github.com/Insurance-Sales-Lab/graphql-postgres-subscriptions"
