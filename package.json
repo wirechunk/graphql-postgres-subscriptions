@@ -12,11 +12,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/Insurance-Sales-Lab/graphql-postgres-subscriptions"
+    "url": "https://github.com/wirechunk/graphql-postgres-subscriptions"
   },
   "peerDependencies": {
     "pg": ">=8",
-    "pg-listen": "wirechunk/pg-listen#4ffd75d511ba4d328d4a110eab9af2c788085190"
+    "pg-listen": "wirechunk/pg-listen#a6f742c766bfef4dad3470b80f1059716fbbf963"
   },
   "devDependencies": {
     "prettier": "^3.3.0",
@@ -25,9 +25,9 @@
   },
   "scripts": {
     "test": "vitest run --threads false",
-    "typecheck": "./node_modules/.bin/tsc --project ./tsconfig.json --noEmit",
+    "typecheck": "tsc --noEmit",
     "build": "npm run build:clean && npm run build:compile && npm run build:copy",
-    "build:clean": "rm -rf dist && mkdir dist",
+    "build:clean": "rm -rf dist",
     "build:copy": "cp README.md LICENSE dist/",
     "build:compile": "tsc",
     "format": "prettier --write .",
