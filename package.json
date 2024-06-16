@@ -1,6 +1,6 @@
 {
   "name": "graphql-subscriptions-postgres",
-  "version": "1.0.1",
+  "version": "build-2024-06-16",
   "main": "./dist/index.js",
   "type": "module",
   "license": "MIT",
@@ -16,7 +16,7 @@
   },
   "peerDependencies": {
     "pg": ">=8",
-    "pg-listen": "wirechunk/pg-listen#a6f742c766bfef4dad3470b80f1059716fbbf963"
+    "pg-listen": "wirechunk/pg-listen#build-2024-06-16"
   },
   "devDependencies": {
     "prettier": "^3.3.0",
